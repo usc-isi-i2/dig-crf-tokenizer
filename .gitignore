@@ -1,0 +1,4 @@
+*.pyc
+**/*.pyc
+digCrfTokenizer.egg-info/
+dist/
