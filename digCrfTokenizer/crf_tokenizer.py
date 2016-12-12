@@ -116,7 +116,7 @@ result = t.tokenize(value).join(" ")
         self.recognizeHtmlTags = recognizeHtmlTags
 
     def setRecognizePunctuation (self, recognizePunctuation):
-        """When True, treate punctuation characters as separate tokens.
+        """When True, treat punctuation characters as separate tokens.
 
         """
         self.recognizePunctuation = recognizePunctuation
