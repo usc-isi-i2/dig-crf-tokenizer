@@ -85,15 +85,17 @@ result = t.tokenize(value).join(" ")
     START_HTML_ENTITY_CHAR = "&"
     END_HTML_ENTITY_CHAR = ";"
 
-    def __init__ (self, create_structured_tokens=False):
-        self.groupPunctuation = False
-        self.recognizeHtmlEntities = False
-        self.recognizeHtmlTags = False
-        self.recognizePunctuation = True # Notice
-        self.skipHtmlEntities = False
-        self.skipHtmlTags = False
+    def __init__ (self, recognize_linebreaks=False, skipHtmlTags=False, skipHtmlEntities=False,
+                  recognizePunctuation=True, recognizeHtmlTags=False, recognizeHtmlEntities=False,
+                  groupPunctuation=False, create_structured_tokens=False):
+        self.groupPunctuation = groupPunctuation
+        self.recognizeHtmlEntities = recognizeHtmlEntities
+        self.recognizeHtmlTags = recognizeHtmlTags
+        self.recognizePunctuation = recognizePunctuation # Notice
+        self.skipHtmlEntities = skipHtmlEntities
+        self.skipHtmlTags = skipHtmlTags
         self.tokenPrefix = None
-        self.recognize_linebreaks = False
+        self.recognize_linebreaks = recognize_linebreaks
         self.create_structured_tokens = create_structured_tokens
 
     def setGroupPunctuation (self, groupPunctuation):
