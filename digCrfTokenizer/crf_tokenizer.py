@@ -78,12 +78,14 @@ result = t.tokenize(value).join(" ")
                                   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
                                   'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
                                   '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '#'}
+    linebreaking_start_character_set = {'\n', '\r'}
+    linebreaking_character_set = {'\n', '\r', '\t'}
     START_HTML_TAG_CHAR = "<"
     END_HTML_TAG_CHAR = ">"
     START_HTML_ENTITY_CHAR = "&"
     END_HTML_ENTITY_CHAR = ";"
 
-    def __init__ (self):
+    def __init__ (self, create_structured_tokens=False):
         self.groupPunctuation = False
         self.recognizeHtmlEntities = False
         self.recognizeHtmlTags = False
@@ -91,6 +93,8 @@ result = t.tokenize(value).join(" ")
         self.skipHtmlEntities = False
         self.skipHtmlTags = False
         self.tokenPrefix = None
+        self.recognize_linebreaks = False
+        self.create_structured_tokens = create_structured_tokens
 
     def setGroupPunctuation (self, groupPunctuation):
         """When True and self.recognizePunctuation is True, group adjacent punctuation
@@ -142,6 +146,13 @@ result = t.tokenize(value).join(" ")
         """
         self.tokenPrefix = tokenPrefix
 
+    def setRecognizeLinebreaks(self, recognize_linebreaks):
+        """When True line breaks \n and \r will be recognized as tokens and all line
+        breaking characters will be grouped into a single token.
+
+        """
+        self.recognize_linebreaks = recognize_linebreaks
+
     def tokenize (self, value):
         """Take a string and break it into tokens. Return the tokens as a list of
         strings.
@@ -154,6 +165,15 @@ result = t.tokenize(value).join(" ")
             GROUP_PUNCTUATION = 1
             PROCESS_HTML_TAG = 2
             PROCESS_HTML_ENTITY = 3
+            GROUP_LINEBREAKS = 4
+
+        state_names = {
+            STATE.NORMAL: "normal",
+            STATE.GROUP_PUNCTUATION: "punctuation",
+            STATE.PROCESS_HTML_TAG: "html",
+            STATE.PROCESS_HTML_ENTITY: "html_entity",
+            STATE.GROUP_LINEBREAKS: "break"
+        }
 
         # "state" and "token" have array values to allow their
         # contents to be modified within finishToken().
@@ -169,7 +189,11 @@ result = t.tokenize(value).join(" ")
         def emitToken():
             """Emit the current token, if any, and return to normal state."""
             if len(token[0]) > 0:
-                tokens.append(token[0])
+                if self.create_structured_tokens:
+                    new_token = { 'value': token[0], 'type': state_names[state[0]]}
+                    tokens.append(new_token)
+                else:
+                    tokens.append(token[0])
             clearToken()
 
         def fixBrokenHtmlEntity():
@@ -259,9 +283,24 @@ result = t.tokenize(value).join(" ")
                     fixBrokenHtmlEntity()
                     # intentional fall-through
 
+            if state[0] == STATE.GROUP_LINEBREAKS:
+                # we will look for \n\r and ignore spaces
+                if c in CrfTokenizer.linebreaking_character_set:
+                    token[0] += c
+                    continue
+                elif c in CrfTokenizer.whitespaceSet:
+                    continue
+                else:
+                    emitToken()
+                    state[0] = STATE.NORMAL
+
             if c in CrfTokenizer.whitespaceSet:
                 # White space terminates the current token, then is dropped.
                 emitToken()
+                # Check to see whether we should look for line breaks
+                if c in CrfTokenizer.linebreaking_start_character_set and self.recognize_linebreaks:
+                    state[0] = STATE.GROUP_LINEBREAKS
+                    token[0] = c
 
             elif c == CrfTokenizer.START_HTML_TAG_CHAR and self.recognizeHtmlTags:
                 emitToken()
@@ -353,7 +392,10 @@ def main(argv=None):
     print t.tokenize("Big & little.")
     print t.tokenize("blond&curly.")
     print t.tokenize("&brokenHtml")
+    print t.tokenize("A line break goes here\n\t \rand a new line starts")
+    t.setRecognizeLinebreaks(True)
+    print t.tokenize("A line break goes here\n\r \rand a new line starts")
 
-# call main() if this is run as standalone                                                             
+    # call main() if this is run as standalone
 if __name__ == "__main__":
     sys.exit(main())
