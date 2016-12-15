@@ -13,7 +13,7 @@ config = {
     'download_url': 'https://github.com/usc-isi-i2/dig-crf-tokenizer',
     'author_email': 'rogers@isi.edu',
     'license' : 'Apache License 2.0',
-    'version': '0.1.5',
+    'version': '0.1.6',
     'packages': ['digCrfTokenizer']
 }
 
