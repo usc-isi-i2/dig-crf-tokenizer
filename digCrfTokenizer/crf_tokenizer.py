@@ -182,6 +182,7 @@ result = t.tokenize(value).join(" ")
         state = [STATE.NORMAL]
         token = [""] # The current token being assembled.
         tokens = [] # The tokens extracted from the input.
+        index = -1
 
         def clearToken():
             """Clear the current token and return to normal state."""
@@ -191,8 +192,10 @@ result = t.tokenize(value).join(" ")
         def emitToken():
             """Emit the current token, if any, and return to normal state."""
             if len(token[0]) > 0:
+                # add character end and start
+                char_start, char_end = index, index + len(token[0])
                 if self.create_structured_tokens:
-                    new_token = { 'value': token[0], 'type': state_names[state[0]]}
+                    new_token = {'value': token[0], 'type': state_names[state[0]], 'char_start': char_start, 'char_end': char_end}
                     tokens.append(new_token)
                 else:
                     tokens.append(token[0])
@@ -235,6 +238,7 @@ result = t.tokenize(value).join(" ")
 
         # Process each character in the input string:
         for c in value:
+            index += 1
             if state[0] == STATE.PROCESS_HTML_TAG:
                 if c in CrfTokenizer.whitespaceSet:
                     continue # Suppress for safety. CRF++ doesn't like spaces in tokens, for example.
